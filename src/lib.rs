@@ -5,14 +5,14 @@ extern crate vst;
 
 use imgui::*;
 
-use baseview::AppRunner;
+use baseview::{AppRunner, Parent, Size, WindowOpenOptions, WindowScalePolicy};
 use raw_window_handle::RawWindowHandle;
 use vst::buffer::AudioBuffer;
 use vst::editor::Editor;
 use vst::plugin::{Category, Info, Plugin, PluginParameters};
 use vst::util::AtomicFloat;
 
-use imgui_baseview::{settings, HiDpiMode, Parent, Runner, Settings};
+use imgui_baseview::{HiDpiMode, RenderSettings, Runner, Settings};
 
 use std::sync::Arc;
 
@@ -42,18 +42,19 @@ impl Editor for TestPluginEditor {
         let parent = raw_window_handle_from_parent(parent);
 
         let settings = Settings {
-            window: settings::Window {
+            window: WindowOpenOptions {
                 title: String::from("imgui-baseview demo window"),
-                logical_size: (WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32),
-                scale_policy: imgui_baseview::WindowScalePolicy::SystemScaleFactor,
+                size: Size::new(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64),
+                scale: WindowScalePolicy::SystemScaleFactor,
+                parent: Parent::WithParent(parent),
             },
             clear_color: (0.0, 0.0, 0.0),
             hidpi_mode: HiDpiMode::Default,
+            render_settings: RenderSettings::default(),
         };
 
         let (_handle, runner) = Runner::open(
             settings,
-            Parent::WithParent(parent),
             self.params.clone(),
             move |run: &mut bool, ui: &Ui, state: &mut Arc<GainEffectParameters>| {
                 ui.show_demo_window(run);
