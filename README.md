@@ -11,6 +11,7 @@ The plugin logs events to `~/tmp/IMGUIBaseviewTest.log`.
 
 **Known issue:** Crashes when plugin window is reopened. Waiting on fix in baseview(https://github.com/RustAudio/baseview).
 
+
 ## Usage: macOS (Untested)
 
 - Run `scripts/macos-build-and-install.sh`
@@ -27,3 +28,5 @@ The plugin logs events to `~/tmp/IMGUIBaseviewTest.log`.
 - Run `cargo build`
 - Copy `target/debug/libbaseview_test_vst2.so` to your VST plugin folder
 - Start your DAW, test the plugin
+
+![Demo](demo.png)
