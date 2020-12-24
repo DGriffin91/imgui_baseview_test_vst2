@@ -17,7 +17,7 @@ use imgui_baseview::{HiDpiMode, RenderSettings, Runner, Settings};
 use std::sync::Arc;
 
 const WINDOW_WIDTH: usize = 1024;
-const WINDOW_HEIGHT: usize = 1024;
+const WINDOW_HEIGHT: usize = 512;
 
 struct TestPluginEditor {
     runner: Option<AppRunner>,
@@ -56,11 +56,12 @@ impl Editor for TestPluginEditor {
         let (_handle, runner) = Runner::open(
             settings,
             self.params.clone(),
-            move |run: &mut bool, ui: &Ui, state: &mut Arc<GainEffectParameters>| {
+            |_io: &mut Io, _state: &mut Arc<GainEffectParameters>| {},
+            |run: &mut bool, ui: &Ui, state: &mut Arc<GainEffectParameters>| {
                 ui.show_demo_window(run);
                 let w = Window::new(im_str!("Example 1: Basic sliders"))
-                    .size([700.0, 340.0], Condition::Appearing)
-                    .position([20.0, 120.0], Condition::Appearing);
+                    .size([200.0, 200.0], Condition::Appearing)
+                    .position([20.0, 20.0], Condition::Appearing);
                 w.build(&ui, || {
                     let mut val = state.amplitude.get();
                     if Slider::new(im_str!("Gain"))
