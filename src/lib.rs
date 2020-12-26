@@ -56,7 +56,7 @@ impl Editor for TestPluginEditor {
         let (_handle, runner) = Runner::open(
             settings,
             self.params.clone(),
-            |_io: &mut Io, _state: &mut Arc<GainEffectParameters>| {},
+            |_context: &mut Context, _state: &mut Arc<GainEffectParameters>| {},
             |run: &mut bool, ui: &Ui, state: &mut Arc<GainEffectParameters>| {
                 ui.show_demo_window(run);
                 let w = Window::new(im_str!("Example 1: Basic sliders"))
