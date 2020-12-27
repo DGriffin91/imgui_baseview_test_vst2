@@ -9,9 +9,6 @@ It implements a [imgui-rs](https://github.com/imgui-rs/imgui-rs) ui for the [vst
 
 The plugin logs events to `~/tmp/IMGUIBaseviewTest.log`.
 
-**Known issue:** Crashes when plugin window is reopened. Waiting on fix in baseview(https://github.com/RustAudio/baseview).
-
-
 ## Usage: macOS (Untested)
 
 - Run `scripts/macos-build-and-install.sh`
