@@ -5,14 +5,14 @@ extern crate vst;
 
 use imgui::*;
 
-use baseview::{AppRunner, Parent, Size, WindowOpenOptions, WindowScalePolicy};
-use raw_window_handle::RawWindowHandle;
+use baseview::{Size, WindowOpenOptions, WindowScalePolicy};
 use vst::buffer::AudioBuffer;
 use vst::editor::Editor;
 use vst::plugin::{Category, Info, Plugin, PluginParameters};
 use vst::util::AtomicFloat;
 
-use imgui_baseview::{HiDpiMode, RenderSettings, Runner, Settings};
+use imgui_baseview::{HiDpiMode, ImguiWindow, RenderSettings, Settings};
+use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 
 use std::sync::Arc;
 
@@ -20,8 +20,8 @@ const WINDOW_WIDTH: usize = 1024;
 const WINDOW_HEIGHT: usize = 512;
 
 struct TestPluginEditor {
-    runner: Option<AppRunner>,
     params: Arc<GainEffectParameters>,
+    is_open: bool,
 }
 
 impl Editor for TestPluginEditor {
@@ -34,26 +34,26 @@ impl Editor for TestPluginEditor {
     }
 
     fn open(&mut self, parent: *mut ::std::ffi::c_void) -> bool {
-        //::log::info!("self.running {}", self.running);
-        if self.runner.is_some() {
-            return true;
+        ::log::info!("Editor open");
+        if self.is_open {
+            return false;
         }
 
-        let parent = raw_window_handle_from_parent(parent);
+        self.is_open = true;
 
         let settings = Settings {
             window: WindowOpenOptions {
                 title: String::from("imgui-baseview demo window"),
                 size: Size::new(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64),
                 scale: WindowScalePolicy::SystemScaleFactor,
-                parent: Parent::WithParent(parent),
             },
             clear_color: (0.0, 0.0, 0.0),
             hidpi_mode: HiDpiMode::Default,
             render_settings: RenderSettings::default(),
         };
 
-        let (_handle, runner) = Runner::open(
+        ImguiWindow::open_parented(
+            &VstParent(parent),
             settings,
             self.params.clone(),
             |_context: &mut Context, _state: &mut Arc<GainEffectParameters>| {},
@@ -74,17 +74,15 @@ impl Editor for TestPluginEditor {
             },
         );
 
-        self.runner = runner;
-
         true
     }
 
     fn is_open(&mut self) -> bool {
-        self.runner.is_some()
+        self.is_open
     }
 
     fn close(&mut self) {
-        self.runner = None;
+        self.is_open = false;
     }
 }
 struct GainEffectParameters {
@@ -102,8 +100,8 @@ impl Default for TestPlugin {
         Self {
             params: params.clone(),
             editor: Some(TestPluginEditor {
-                runner: None,
                 params: params.clone(),
+                is_open: false,
             }),
         }
     }
@@ -220,34 +218,42 @@ impl PluginParameters for GainEffectParameters {
     }
 }
 
-#[cfg(target_os = "macos")]
-fn raw_window_handle_from_parent(parent: *mut ::std::ffi::c_void) -> RawWindowHandle {
-    use raw_window_handle::macos::MacOSHandle;
+struct VstParent(*mut ::std::ffi::c_void);
 
-    RawWindowHandle::MacOS(MacOSHandle {
-        ns_view: parent as *mut ::std::ffi::c_void,
-        ..MacOSHandle::empty()
-    })
+#[cfg(target_os = "macos")]
+unsafe impl HasRawWindowHandle for VstParent {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        use raw_window_handle::macos::MacOSHandle;
+
+        RawWindowHandle::MacOS(MacOSHandle {
+            ns_view: self.0 as *mut ::std::ffi::c_void,
+            ..MacOSHandle::empty()
+        })
+    }
 }
 
 #[cfg(target_os = "windows")]
-fn raw_window_handle_from_parent(parent: *mut ::std::ffi::c_void) -> RawWindowHandle {
-    use raw_window_handle::windows::WindowsHandle;
+unsafe impl HasRawWindowHandle for VstParent {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        use raw_window_handle::windows::WindowsHandle;
 
-    RawWindowHandle::Windows(WindowsHandle {
-        hwnd: parent,
-        ..WindowsHandle::empty()
-    })
+        RawWindowHandle::Windows(WindowsHandle {
+            hwnd: self.0,
+            ..WindowsHandle::empty()
+        })
+    }
 }
 
 #[cfg(target_os = "linux")]
-fn raw_window_handle_from_parent(parent: *mut ::std::ffi::c_void) -> RawWindowHandle {
-    use raw_window_handle::unix::XcbHandle;
+unsafe impl HasRawWindowHandle for VstParent {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        use raw_window_handle::unix::XcbHandle;
 
-    RawWindowHandle::Xcb(XcbHandle {
-        window: parent as u32,
-        ..XcbHandle::empty()
-    })
+        RawWindowHandle::Xcb(XcbHandle {
+            window: self.0 as u32,
+            ..XcbHandle::empty()
+        })
+    }
 }
 
 plugin_main!(TestPlugin);
