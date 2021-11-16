@@ -10,13 +10,13 @@ name = "imgui_baseview_test_vst2"
 crate-type = ["cdylib"]
 
 [dependencies]
-baseview = {git = "https://github.com/RustAudio/baseview", rev = "d399c1275522ae75f5a82caadd904df2685c8660" }
-dirs = "3"
+baseview = {git = "https://github.com/RustAudio/baseview", rev = "f6e99e9aa6f5aeb6b721cb05e4d882a51d995909" }
+dirs = "4"
 log = "0.4"
 log-panics = "2"
 raw-window-handle = "0.3"
-simplelog = "0.8"
+simplelog = "0.11"
 vst = "0.2"
-rtrb = "0.1.1"
-imgui-baseview = {git = "https://github.com/BillyDM/imgui-baseview", rev = "3ea419f53727a39d36a0c2e0767f6873a23bf0e9" }
-imgui = "0.7"
+rtrb = "0.2"
+imgui-baseview = {git = "https://github.com/BillyDM/imgui-baseview", rev = "c41817315eda18badeca560b21df08204dcacae8" }
+imgui = "0.8"

@@ -5,7 +5,7 @@ extern crate vst;
 
 use imgui::*;
 
-use baseview::{Size, WindowOpenOptions, WindowScalePolicy};
+use baseview::{Size, WindowHandle, WindowOpenOptions, WindowScalePolicy};
 use vst::buffer::AudioBuffer;
 use vst::editor::Editor;
 use vst::plugin::{Category, Info, Plugin, PluginParameters};
@@ -21,6 +21,7 @@ const WINDOW_HEIGHT: usize = 512;
 
 struct TestPluginEditor {
     params: Arc<GainEffectParameters>,
+    window_handle: Option<WindowHandle>,
     is_open: bool,
 }
 
@@ -52,20 +53,19 @@ impl Editor for TestPluginEditor {
             render_settings: RenderSettings::default(),
         };
 
-        ImguiWindow::open_parented(
+        let window_handle = ImguiWindow::open_parented(
             &VstParent(parent),
             settings,
             self.params.clone(),
             |_context: &mut Context, _state: &mut Arc<GainEffectParameters>| {},
             |run: &mut bool, ui: &Ui, state: &mut Arc<GainEffectParameters>| {
                 ui.show_demo_window(run);
-                let w = Window::new(im_str!("Example 1: Basic sliders"))
+                let w = Window::new("Example 1: Basic sliders")
                     .size([200.0, 200.0], Condition::Appearing)
                     .position([20.0, 20.0], Condition::Appearing);
                 w.build(&ui, || {
                     let mut val = state.amplitude.get();
-                    if Slider::new(im_str!("Gain"))
-                        .range(0.0..=1.0)
+                    if Slider::new("Gain", 0.0, 1.0)
                         .build(&ui, &mut val)
                     {
                         state.amplitude.set(val)
@@ -73,6 +73,8 @@ impl Editor for TestPluginEditor {
                 });
             },
         );
+
+        self.window_handle = Some(window_handle);
 
         true
     }
@@ -83,6 +85,9 @@ impl Editor for TestPluginEditor {
 
     fn close(&mut self) {
         self.is_open = false;
+        if let Some(mut window_handle) = self.window_handle.take() {
+            window_handle.close();
+        }
     }
 }
 struct GainEffectParameters {
@@ -101,6 +106,7 @@ impl Default for TestPlugin {
             params: params.clone(),
             editor: Some(TestPluginEditor {
                 params: params.clone(),
+                window_handle: None,
                 is_open: false,
             }),
         }
